@@ -384,8 +384,8 @@
             chavePix: "54.219.130/0001-49",
             tipoPix: "CNPJ",
             precoPizza: 80.00,
-            telefoneWhatsApp: "5566999999999", // SUBSTITUIR PELO NÚMERO REAL
-            appsScriptUrl: "SUA_URL_DO_APPS_SCRIPT_AQUI" // VOCÊ VAI SUBSTITUIR
+            telefoneWhatsApp: "5534991453905",
+            appsScriptUrl: "https://script.google.com/macros/s/AKfycbwf7bPHgL-oLa-hlsnpbbx6qnr7KzBhJOK2o4zGzf25T5UOK7ZaoiL9Ty-c6l0Iu6Q/exec"
         };
 
         const VENDEDORES = {
@@ -541,7 +541,7 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('Chave PIX copiada! Cole no seu aplicativo de pagamento.');
+                alert('✅ Chave PIX copiada! Cole no seu aplicativo de pagamento.');
             }).catch(() => {
                 alert('Chave PIX: ' + text);
             });
@@ -731,7 +731,7 @@
                             </button>
                         `;
                         
-                        // Enviar dados para a planilha como PENDENTE
+                        // Enviar dados para a planilha (se configurado)
                         enviarParaPlanilha();
                         break;
                 }
@@ -756,21 +756,23 @@
                 status_retirada: "AGUARDANDO"
             };
             
-            console.log("Enviando para planilha:", dados);
+            console.log("📊 Pedido registrado:", dados);
             
-            // DESCOMENTAR QUANDO TIVER A URL DO APPS SCRIPT
-            /*
-            fetch(CONFIG.appsScriptUrl, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            }).then(() => {
-                console.log("Pedido registrado com sucesso!");
-            }).catch(error => {
-                console.error("Erro ao enviar:", error);
-            });
-            */
+            // Enviar para planilha (se URL configurada)
+            if (CONFIG.appsScriptUrl) {
+                fetch(CONFIG.appsScriptUrl, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dados)
+                }).then(() => {
+                    console.log("✅ Enviado para planilha!");
+                }).catch(error => {
+                    console.error("❌ Erro ao enviar:", error);
+                });
+            } else {
+                console.log("⚠️ Apps Script URL não configurada");
+            }
         }
 
         // ========== WHATSAPP ==========
@@ -811,3 +813,63 @@ _Enviando comprovante do PIX..._`;
                         </div>
                     </div>
                 `;
+                chat.scrollTop = chat.scrollHeight;
+                
+                document.getElementById("input-container").innerHTML = `
+                    <button onclick="window.location.reload()">Fazer Novo Pedido</button>
+                `;
+            }, 1000);
+        }
+
+        // ========== NAVEGAÇÃO ==========
+        function handleNext() {
+            const step = steps[currentStep];
+            const input = document.getElementById("user-input");
+            
+            if (!input) return;
+            
+            const value = input.value.trim();
+            
+            // Validações
+            if (step.name === "nome" && value === "") {
+                alert("Por favor, digite seu nome.");
+                return;
+            }
+            
+            if (step.name === "telefone") {
+                const digits = value.replace(/\D/g, "");
+                if (digits.length < 10) {
+                    alert("Por favor, digite um telefone válido com DDD.");
+                    return;
+                }
+            }
+            
+            if (step.name === "endereco" && value === "") {
+                alert("Por favor, digite seu endereço.");
+                return;
+            }
+            
+            responses[step.name] = value;
+            addUserMessage(value);
+            
+            currentStep++;
+            processStep();
+        }
+
+        // ========== INICIALIZAÇÃO ==========
+        function init() {
+            console.log("🚀 Sistema iniciado!");
+            console.log("📋 Configurações:", CONFIG);
+            getVendedorFromUrl();
+            processStep();
+        }
+
+        // Garantir que o script execute quando a página carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
