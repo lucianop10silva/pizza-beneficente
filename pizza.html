@@ -424,11 +424,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const codigo = urlParams.get('v');
             
+            console.log("Parâmetro v da URL:", codigo);
+            
             if (codigo && VENDEDORES[codigo.toUpperCase()]) {
                 vendedorCodigo = codigo.toUpperCase();
                 vendedorNome = VENDEDORES[vendedorCodigo].nome;
+                console.log("Vendedor identificado:", vendedorNome);
                 document.getElementById('vendedor-display').style.display = 'block';
                 document.getElementById('vendedor-nome').textContent = vendedorNome;
+            } else {
+                console.log("Nenhum vendedor na URL ou código inválido");
+                vendedorCodigo = 'DIRETO';
+                vendedorNome = 'Venda Direta';
             }
         }
 
@@ -720,7 +727,7 @@
                             </div>
                             
                             <div class="alert-warning">
-                                ⚠️ <strong>Importante:</strong> Envie o comprovante para confirmarmos seu pedido!
+                               ⚠️ <strong>Importante:</strong> Envie o comprovante para confirmarmos seu pedido!
                             </div>
                         `;
                         
