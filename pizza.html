@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pedido de Pizza - Igreja da Multiplicação</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #A80000;
+            background-image: url('https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        
+        .title-fixed {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            color: #FFC300;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .subtitle-fixed {
+            font-size: 16px;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        
+        .vendedor-info {
+            background: rgba(255, 195, 0, 0.95);
+            color: #000;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 450px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .bot-message {
+            background: #f5f5f5;
+            color: #333;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border-left: 4px solid #A80000;
+        }
+        
+        .user-message {
+            background: #FFC300;
+            color: #000;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .avatar-fallback {
+            width: 35px;
+            height: 35px;
+            background: #A80000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+            border: 2px solid #FFC300;
+        }
+        
+        .typing {
+            display: none;
+            margin: 15px 0;
+            padding: 12px 16px;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #FFC300;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+        
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-8px); opacity: 1; }
+        }
+        
+        .input-container {
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        input[type="text"], input[type="tel"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #A80000;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #A80000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #7a0000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 0, 0, 0.5);
+        }
+        
+        .cart-item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #fcfcfc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            width: 100%;
+        }
+        
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-item:last-of-type {
+            border-bottom: none;
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid #eee;
+        }
+        
+        .cart-item-details {
+            flex-grow: 1;
+        }
+        
+        .cart-item-details strong {
+            display: block;
+            font-size: 15px;
+            color: #333;
+        }
+        
+        .cart-item-details span {
+            font-size: 13px;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #A80000;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .quantity-control button {
+            background: #A80000;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+        }
+        
+        .quantity-control button:hover {
+            background: #7a0000;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .quantity-control input[type="number"] {
+            width: 40px;
+            text-align: center;
+            border: none;
+            padding: 5px 0;
+            font-size: 15px;
+            -moz-appearance: textfield;
+        }
+        
+        .quantity-control input[type="number"]::-webkit-outer-spin-button,
+        .quantity-control input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .cart-total-summary {
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px solid #FFC300;
+        }
+        
+        .cart-total-summary strong {
+            font-size: 1.5em;
+            color: #008000;
+        }
+        
+        .pix-info {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .pix-info strong {
+            color: #2e7d32;
+            font-size: 16px;
+        }
+        
+        .pix-key {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            border: 1px dashed #4caf50;
+        }
+        
+        .copy-button {
+            background: #4caf50 !important;
+            margin-top: 10px;
+        }
+        
+        .copy-button:hover {
+            background: #388e3c !important;
+        }
+        
+        .payment-instructions {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        
+        .whatsapp-button {
+            background: #25d366 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .whatsapp-button:hover {
+            background: #1da851 !important;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-fixed">PIZZA BENEFICENTE 🍕</div>
+    <div class="subtitle-fixed">Igreja da Multiplicação</div>
+    
+    <div id="vendedor-display" class="vendedor-info" style="display: none;">
+        Vendedor: <span id="vendedor-nome"></span>
+    </div>
+    
+    <div class="chat-container" id="chat"></div>
+    
+    <div class="typing" id="typing-indicator">
+        <div class="avatar-fallback">IM</div>
+        <div class="typing-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+    
+    <div class="input-container" id="input-container"></div>
+
+    <script>
+        // ========== CONFIGURAÇÕES ==========
+        const CONFIG = {
+            nomeIgreja: "Igreja da Multiplicação",
+            enderecoRetirada: "Rua dos Cravos, 687, Jardim Violetas",
+            cidadeRetirada: "Sinop - MT",
+            dataEvento: "13/12/2025",
+            horarioRetirada: "A partir das 18:00",
+            chavePix: "54.219.130/0001-49",
+            tipoPix: "CNPJ",
+            precoPizza: 80.00,
+            telefoneWhatsApp: "5566999999999", // SUBSTITUIR PELO NÚMERO REAL
+            appsScriptUrl: "SUA_URL_DO_APPS_SCRIPT_AQUI" // VOCÊ VAI SUBSTITUIR
+        };
+
+        const VENDEDORES = {
+            "ROSIDE01": { nome: "Roside Jose", telefone: "" },
+            "MIRIAM02": { nome: "Miriam Amorim", telefone: "" },
+            "LUCIANO03": { nome: "Luciano Silva", telefone: "" },
+            "JANAINA04": { nome: "Janaina Silva", telefone: "" },
+            "RENATO05": { nome: "Renato", telefone: "" },
+            "GUARANICE06": { nome: "Guaranice", telefone: "" }
+        };
+
+        const PIZZAS = {
+            mista: {
+                nome: "Pizza Mista",
+                preco: 80.00,
+                imagem: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=200&h=200&fit=crop"
+            },
+            frango: {
+                nome: "Pizza Frango c/ Catupiry",
+                preco: 80.00,
+                imagem: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&h=200&fit=crop"
+            }
+        };
+
+        // ========== VARIÁVEIS GLOBAIS ==========
+        let currentStep = 0;
+        let totalPizzas = 0;
+        let totalValor = 0;
+        let pedidoId = '';
+        const responses = {};
+        let vendedorCodigo = 'DIRETO';
+        let vendedorNome = 'Venda Direta';
+
+        // ========== CAPTURAR VENDEDOR DA URL ==========
+        function getVendedorFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigo = urlParams.get('v');
+            
+            if (codigo && VENDEDORES[codigo.toUpperCase()]) {
+                vendedorCodigo = codigo.toUpperCase();
+                vendedorNome = VENDEDORES[vendedorCodigo].nome;
+                document.getElementById('vendedor-display').style.display = 'block';
+                document.getElementById('vendedor-nome').textContent = vendedorNome;
+            }
+        }
+
+        // ========== PASSOS DO FLUXO ==========
+        const steps = [
+            {
+                text: `Olá! Seja bem-vindo(a) à nossa venda de pizzas beneficente! 🍕💛`,
+                type: "intro",
+                delay: 1500
+            },
+            {
+                text: `Toda a renda será destinada às missões da ${CONFIG.nomeIgreja}. Cada pizza grande custa **R$ ${CONFIG.precoPizza.toFixed(2).replace('.', ',')}**.`,
+                type: "intro",
+                delay: 2000
+            },
+            {
+                text: "Escolha a quantidade de cada sabor:",
+                type: "pizza_selection",
+                delay: 1000
+            },
+            {
+                text: "Perfeito! Para quem devemos reservar as pizzas?",
+                type: "input",
+                name: "nome",
+                inputType: "text",
+                placeholder: "Seu nome completo"
+            },
+            {
+                text: "Qual seu telefone com WhatsApp?",
+                type: "input",
+                name: "telefone",
+                inputType: "tel",
+                placeholder: "(00) 00000-0000"
+            },
+            {
+                text: "Qual seu endereço? (apenas para registro)",
+                type: "input",
+                name: "endereco",
+                inputType: "text",
+                placeholder: "Rua, Número, Bairro"
+            },
+            {
+                text: "Resumo do seu pedido:",
+                type: "resumo",
+                delay: 1500
+            },
+            {
+                text: "Agora vamos ao pagamento via PIX:",
+                type: "pix_payment",
+                delay: 1000
+            }
+        ];
+
+        // ========== FUNÇÕES DE MENSAGEM ==========
+        function showTyping() {
+            document.getElementById("typing-indicator").style.display = "flex";
+            document.getElementById("input-container").style.display = "none";
+        }
+
+        function hideTyping() {
+            document.getElementById("typing-indicator").style.display = "none";
+        }
+
+        function addBotMessage(text) {
+            const chat = document.getElementById("chat");
+            chat.innerHTML += `
+                <div class="message bot-message">
+                    <div class="avatar-fallback">IM</div>
+                    <div class="message-content">${text}</div>
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const chat = document.getElementById("chat");
+            chat.innerHTML += `<div class="message user-message">${text}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // ========== FUNÇÕES UTILITÁRIAS ==========
+        function formatBRL(value) {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function generatePedidoId() {
+            const timestamp = Date.now().toString(36);
+            const random = Math.random().toString(36).substring(2, 6);
+            return `PED-${timestamp}-${random}`.toUpperCase();
+        }
+
+        function addPhoneMask(input) {
+            input.addEventListener("input", function(e) {
+                let value = e.target.value.replace(/\D/g, "");
+                if (value.length > 11) value = value.substring(0, 11);
+                
+                if (value.length > 10) {
+                    value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+                } else if (value.length > 6) {
+                    value = value.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+                } else if (value.length > 2) {
+                    value = value.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+                } else if (value.length > 0) {
+                    value = value.replace(/^(\d*)$/, '($1');
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Chave PIX copiada! Cole no seu aplicativo de pagamento.');
+            }).catch(() => {
+                alert('Chave PIX: ' + text);
+            });
+        }
+
+        // ========== CARRINHO DE PIZZAS ==========
+        function changeQuantity(itemId, delta) {
+            const input = document.getElementById(itemId);
+            let value = parseInt(input.value) || 0;
+            value = Math.max(0, value + delta);
+            input.value = value;
+            updateCartTotal();
+        }
+
+        function updateCartTotal() {
+            const qtdMista = parseInt(document.getElementById('qtd-mista')?.value) || 0;
+            const qtdFrango = parseInt(document.getElementById('qtd-frango')?.value) || 0;
+            totalPizzas = qtdMista + qtdFrango;
+            totalValor = totalPizzas * CONFIG.precoPizza;
+            
+            const totalElement = document.getElementById('total-resumo-texto');
+            if (totalElement) {
+                totalElement.textContent = `Total: ${formatBRL(totalValor)}`;
+            }
+        }
+
+        function handlePizzaSelection() {
+            const qtdMista = parseInt(document.getElementById('qtd-mista').value) || 0;
+            const qtdFrango = parseInt(document.getElementById('qtd-frango').value) || 0;
+            
+            if (qtdMista + qtdFrango === 0) {
+                alert("Por favor, selecione pelo menos 1 pizza!");
+                return;
+            }
+            
+            responses.qtd_mista = qtdMista;
+            responses.qtd_frango = qtdFrango;
+            
+            let resumo = [];
+            if (qtdMista > 0) resumo.push(`${qtdMista}x Mista`);
+            if (qtdFrango > 0) resumo.push(`${qtdFrango}x Frango`);
+            
+            addUserMessage(`${resumo.join(' + ')} = ${formatBRL(totalValor)}`);
+            currentStep++;
+            processStep();
+        }
+
+        // ========== PROCESSAR PASSOS ==========
+        function processStep() {
+            if (currentStep >= steps.length) return;
+            
+            const step = steps[currentStep];
+            showTyping();
+            
+            const delay = step.delay || 800;
+            
+            setTimeout(() => {
+                hideTyping();
+                
+                const inputContainer = document.getElementById("input-container");
+                inputContainer.style.display = "flex";
+                inputContainer.innerHTML = "";
+                
+                if (step.type !== "final") {
+                    addBotMessage(step.text);
+                }
+                
+                switch (step.type) {
+                    case "intro":
+                        currentStep++;
+                        setTimeout(processStep, 100);
+                        break;
+                        
+                    case "pizza_selection":
+                        inputContainer.innerHTML = `
+                            <div class="cart-item-list">
+                                <div class="cart-item">
+                                    <img src="${PIZZAS.mista.imagem}" alt="Pizza Mista" class="cart-item-image">
+                                    <div class="cart-item-details">
+                                        <strong>${PIZZAS.mista.nome}</strong>
+                                        <span>R$ ${CONFIG.precoPizza.toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    <div class="quantity-control">
+                                        <button onclick="changeQuantity('qtd-mista', -1)">-</button>
+                                        <input type="number" id="qtd-mista" value="0" min="0" onchange="updateCartTotal()">
+                                        <button onclick="changeQuantity('qtd-mista', 1)">+</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="cart-item">
+                                    <img src="${PIZZAS.frango.imagem}" alt="Pizza Frango" class="cart-item-image">
+                                    <div class="cart-item-details">
+                                        <strong>${PIZZAS.frango.nome}</strong>
+                                        <span>R$ ${CONFIG.precoPizza.toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    <div class="quantity-control">
+                                        <button onclick="changeQuantity('qtd-frango', -1)">-</button>
+                                        <input type="number" id="qtd-frango" value="0" min="0" onchange="updateCartTotal()">
+                                        <button onclick="changeQuantity('qtd-frango', 1)">+</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="cart-total-summary">
+                                    <span id="total-resumo-texto">Total: ${formatBRL(0)}</span>
+                                </div>
+                            </div>
+                            <button onclick="handlePizzaSelection()">Confirmar Pedido</button>
+                        `;
+                        updateCartTotal();
+                        break;
+                        
+                    case "input":
+                        inputContainer.innerHTML = `
+                            <input type="${step.inputType}" id="user-input" placeholder="${step.placeholder}" required>
+                            <button onclick="handleNext()">Enviar</button>
+                        `;
+                        
+                        const inputElement = document.getElementById("user-input");
+                        if (step.name === "telefone") {
+                            addPhoneMask(inputElement);
+                        }
+                        
+                        inputElement.addEventListener("keypress", function(e) {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleNext();
+                            }
+                        });
+                        
+                        inputElement.focus();
+                        break;
+                        
+                    case "resumo":
+                        const resumoHtml = `
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                <strong>👤 ${responses.nome}</strong><br>
+                                📱 ${responses.telefone}<br>
+                                📍 ${responses.endereco}<br><br>
+                                🍕 <strong>${totalPizzas} pizza(s)</strong><br>
+                                ${responses.qtd_mista > 0 ? `• ${responses.qtd_mista}x Mista<br>` : ''}
+                                ${responses.qtd_frango > 0 ? `• ${responses.qtd_frango}x Frango<br>` : ''}
+                                <br>
+                                💰 <strong style="color: #008000; font-size: 1.2em;">${formatBRL(totalValor)}</strong>
+                            </div>
+                        `;
+                        
+                        const chat = document.getElementById("chat");
+                        chat.innerHTML += `<div class="message bot-message">
+                            <div class="avatar-fallback">IM</div>
+                            <div class="message-content">${resumoHtml}</div>
+                        </div>`;
+                        
+                        currentStep++;
+                        setTimeout(processStep, 1500);
+                        break;
+                        
+                    case "pix_payment":
+                        pedidoId = generatePedidoId();
+                        
+                        const pixHtml = `
+                            <div class="pix-info">
+                                <strong>💳 Pagamento via PIX</strong>
+                                <div class="pix-key">${CONFIG.chavePix}</div>
+                                <button class="copy-button" onclick="copyToClipboard('${CONFIG.chavePix}')">
+                                    📋 Copiar Chave PIX
+                                </button>
+                                
+                                <div class="payment-instructions">
+                                    <strong>Como pagar:</strong><br>
+                                    1. Copie a chave PIX acima<br>
+                                    2. Abra seu aplicativo bancário<br>
+                                    3. Faça o PIX de <strong>${formatBRL(totalValor)}</strong><br>
+                                    4. Tire print do comprovante<br>
+                                    5. Envie via WhatsApp
+                                </div>
+                            </div>
+                            
+                            <div class="alert-warning">
+                                ⚠️ <strong>Importante:</strong> Envie o comprovante para confirmarmos seu pedido!
+                            </div>
+                        `;
+                        
+                        inputContainer.innerHTML = `
+                            <div style="width: 100%;">${pixHtml}</div>
+                            <button class="whatsapp-button" onclick="enviarWhatsApp()">
+                                📱 Enviar Comprovante via WhatsApp
+                            </button>
+                        `;
+                        
+                        // Enviar dados para a planilha como PENDENTE
+                        enviarParaPlanilha();
+                        break;
+                }
+            }, delay);
+        }
+
+        // ========== ENVIO PARA PLANILHA ==========
+        function enviarParaPlanilha() {
+            const dados = {
+                pedido_id: pedidoId,
+                data_pedido: new Date().toLocaleString('pt-BR'),
+                nome: responses.nome,
+                telefone: responses.telefone,
+                endereco: responses.endereco,
+                qtd_mista: responses.qtd_mista,
+                qtd_frango: responses.qtd_frango,
+                total_pizzas: totalPizzas,
+                valor_total: totalValor,
+                vendedor_nome: vendedorNome,
+                vendedor_codigo: vendedorCodigo,
+                status_pagamento: "PENDENTE",
+                status_retirada: "AGUARDANDO"
+            };
+            
+            console.log("Enviando para planilha:", dados);
+            
+            // DESCOMENTAR QUANDO TIVER A URL DO APPS SCRIPT
+            /*
+            fetch(CONFIG.appsScriptUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            }).then(() => {
+                console.log("Pedido registrado com sucesso!");
+            }).catch(error => {
+                console.error("Erro ao enviar:", error);
+            });
+            */
+        }
+
+        // ========== WHATSAPP ==========
+        function enviarWhatsApp() {
+            const mensagem = `🍕 *COMPROVANTE - PIZZA BENEFICENTE*
+            
+*Pedido:* ${pedidoId}
+*Nome:* ${responses.nome}
+*Telefone:* ${responses.telefone}
+
+*Pizzas:*
+${responses.qtd_mista > 0 ? `• ${responses.qtd_mista}x Mista\n` : ''}${responses.qtd_frango > 0 ? `• ${responses.qtd_frango}x Frango\n` : ''}
+*Total:* ${formatBRL(totalValor)}
+
+*Vendedor:* ${vendedorNome}
+
+_Enviando comprovante do PIX..._`;
+            
+            const whatsappUrl = `https://wa.me/${CONFIG.telefoneWhatsApp}?text=${encodeURIComponent(mensagem)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Mostrar mensagem final
+            setTimeout(() => {
+                const chat = document.getElementById("chat");
+                chat.innerHTML += `
+                    <div class="message bot-message" style="border-left: 4px solid #008000;">
+                        <div class="avatar-fallback">IM</div>
+                        <div class="message-content">
+                            <strong>✅ Pedido Registrado!</strong><br><br>
+                            Seu pedido <strong>${pedidoId}</strong> foi registrado com sucesso!<br><br>
+                            ⏳ Aguardamos a confirmação do seu pagamento.<br><br>
+                            Após confirmarmos, você receberá o <strong>código de retirada</strong> por WhatsApp.<br><br>
+                            <strong>📍 Retirada:</strong><br>
+                            ${CONFIG.enderecoRetirada}<br>
+                            ${CONFIG.cidadeRetirada}<br>
+                            ${CONFIG.dataEvento} - ${CONFIG.horarioRetirada}<br><br>
+                            🙏 Deus abençoe!
+                        </div>
+                    </div>
+                `;
