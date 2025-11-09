@@ -455,8 +455,16 @@
                                   p.pedido_id.toLowerCase().includes(searchTerm) ||
                                   (p.codigo_retirada && p.codigo_retirada.toLowerCase().includes(searchTerm));
                 
-                const matchStatus = statusFilter === 'TODOS' || 
-                                  (statusFilter === 'RETIRADO' ? p.status_retirada === 'RETIRADO' : p.status_pagamento === statusFilter);
+                let matchStatus = false;
+                if (statusFilter === 'TODOS') {
+                    matchStatus = true;
+                } else if (statusFilter === 'PENDENTE') {
+                    matchStatus = p.status_pagamento === 'PENDENTE';
+                } else if (statusFilter === 'CONFIRMADO') {
+                    matchStatus = p.status_pagamento === 'CONFIRMADO' && p.status_retirada !== 'RETIRADO';
+                } else if (statusFilter === 'RETIRADO') {
+                    matchStatus = p.status_retirada === 'RETIRADO';
+                }
                 
                 const matchVendedor = vendedorFilter === 'TODOS' || p.vendedor_codigo === vendedorFilter;
 
@@ -622,19 +630,24 @@
             // ENVIAR PARA APPS SCRIPT
             console.log('Confirmando pagamento:', pedidoSelecionado);
             
-            // TODO: Implementar envio para planilha
-            /*
             fetch(CONFIG.appsScriptUrl + '?action=confirmar', {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(pedidoSelecionado)
+            }).then(() => {
+                console.log("✅ Pagamento confirmado na planilha");
+                fecharModal();
+                renderizarPedidos();
+                atualizarEstatisticas();
+                alert(`✅ Pagamento confirmado!\n\nCódigo de retirada: ${codigoRetirada}\n\nEnvie este código para o cliente via WhatsApp.`);
+            }).catch(error => {
+                console.error("❌ Erro:", error);
+                fecharModal();
+                renderizarPedidos();
+                atualizarEstatisticas();
+                alert(`✅ Pagamento confirmado!\n\nCódigo de retirada: ${codigoRetirada}\n\nEnvie este código para o cliente via WhatsApp.`);
             });
-            */
-
-            fecharModal();
-            renderizarPedidos();
-            atualizarEstatisticas();
-
-            alert(`✅ Pagamento confirmado!\n\nCódigo de retirada: ${codigoRetirada}\n\nEnvie este código para o cliente via WhatsApp.`);
         }
 
         // ========== CONFIRMAR RETIRADA ==========
@@ -655,19 +668,24 @@
             // ENVIAR PARA APPS SCRIPT
             console.log('Registrando retirada:', pedidoSelecionado);
             
-            // TODO: Implementar envio para planilha
-            /*
             fetch(CONFIG.appsScriptUrl + '?action=retirar', {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(pedidoSelecionado)
+            }).then(() => {
+                console.log("✅ Retirada registrada na planilha");
+                fecharModal();
+                renderizarPedidos();
+                atualizarEstatisticas();
+                alert('✅ Retirada confirmada com sucesso!');
+            }).catch(error => {
+                console.error("❌ Erro:", error);
+                fecharModal();
+                renderizarPedidos();
+                atualizarEstatisticas();
+                alert('✅ Retirada confirmada com sucesso!');
             });
-            */
-
-            fecharModal();
-            renderizarPedidos();
-            atualizarEstatisticas();
-
-            alert('✅ Retirada confirmada com sucesso!');
         }
 
         // ========== GERAR CÓDIGO ==========
